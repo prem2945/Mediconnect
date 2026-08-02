@@ -1,11 +1,22 @@
 import Groq from "groq-sdk";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
-});
+let groqInstance = null;
+
+const getGroqClient = () => {
+  if (!groqInstance && process.env.GROQ_API_KEY) {
+    groqInstance = new Groq({
+      apiKey: process.env.GROQ_API_KEY
+    });
+  }
+  return groqInstance;
+};
 
 export const sendToGroq = async (prompt) => {
   try {
+    const groq = getGroqClient();
+    if (!groq) {
+      throw new Error("GROQ_API_KEY is not configured");
+    }
     const completion = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
@@ -26,6 +37,14 @@ export const sendToGroq = async (prompt) => {
 
 export const analyzeReceptionistIntent = async (history) => {
   try {
+    const groq = getGroqClient();
+    if (!groq) {
+      return {
+        date: null,
+        time: null,
+        response: "AI Receptionist is currently unavailable. Please configure GROQ_API_KEY."
+      };
+    }
     const completion = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
