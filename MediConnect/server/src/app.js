@@ -1,5 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import clinicRoutes from './routes/clinic.routes.js';
@@ -43,12 +46,21 @@ app.use("/api/v1/ai-insights", aiInsightsRoutes);
 app.use("/api/v1/ai-receptionist", aiReceptionistRoutes);
 
 // Serve React frontend static assets in production
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const clientBuildPath = path.resolve(__dirname, '../../../MediConnect/client/dist');
+
+const candidatePaths = [
+    path.resolve(__dirname, '../../client/dist'),
+    path.resolve(__dirname, '../../../MediConnect/client/dist'),
+    path.resolve(process.cwd(), '../client/dist'),
+    path.resolve(process.cwd(), 'client/dist'),
+    path.resolve(process.cwd(), 'MediConnect/client/dist'),
+];
+
+const clientBuildPath = candidatePaths.find(p => fs.existsSync(path.join(p, 'index.html'))) || candidatePaths[0];
+
+console.log(`[INFO] Client build path resolved to: ${clientBuildPath} (index.html exists: ${fs.existsSync(path.join(clientBuildPath, 'index.html'))})`);
 
 app.use(express.static(clientBuildPath));
 
@@ -56,11 +68,11 @@ app.get('*', (req, res, next) => {
     if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/auth')) {
         return next();
     }
-    res.sendFile(path.join(clientBuildPath, 'index.html'), (err) => {
-        if (err) {
-            next();
-        }
-    });
+    const indexPath = path.join(clientBuildPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+    }
+    next();
 });
 
 // Middleware
