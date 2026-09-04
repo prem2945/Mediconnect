@@ -42,6 +42,27 @@ app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/ai-insights", aiInsightsRoutes);
 app.use("/api/v1/ai-receptionist", aiReceptionistRoutes);
 
+// Serve React frontend static assets in production
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientBuildPath = path.resolve(__dirname, '../../../MediConnect/client/dist');
+
+app.use(express.static(clientBuildPath));
+
+app.get('*', (req, res, next) => {
+    if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/auth')) {
+        return next();
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'), (err) => {
+        if (err) {
+            next();
+        }
+    });
+});
+
 // Middleware
 app.use(notFound);
 app.use(errorHandler);

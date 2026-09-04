@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "cd MediConnect/server && npm install",
-    "start": "cd MediConnect/server && npm start"
+    "postinstall": "npm run build",
+    "build": "npm --prefix MediConnect/client install && npm --prefix MediConnect/client run build && npm --prefix MediConnect/server install",
+    "start": "npm --prefix MediConnect/server start"
   },
   "engines": {
     "node": ">=18.0.0"
