@@ -166,13 +166,13 @@ function Register() {
                         {/* Role Selection */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                I am a
+                                I am registering as
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setRole('PATIENT')}
-                                    className={`p-3 rounded-lg border text-sm font-medium transition-colors ${role === 'PATIENT'
+                                    className={`p-2.5 rounded-lg border text-xs font-semibold transition-colors ${role === 'PATIENT'
                                         ? 'border-blue-500 bg-blue-50 text-blue-700'
                                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                                         }`}
@@ -182,12 +182,22 @@ function Register() {
                                 <button
                                     type="button"
                                     onClick={() => setRole('DOCTOR')}
-                                    className={`p-3 rounded-lg border text-sm font-medium transition-colors ${role === 'DOCTOR'
-                                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                    className={`p-2.5 rounded-lg border text-xs font-semibold transition-colors ${role === 'DOCTOR'
+                                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                                         }`}
                                 >
                                     Doctor
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setRole('ADMIN')}
+                                    className={`p-2.5 rounded-lg border text-xs font-semibold transition-colors ${role === 'ADMIN'
+                                        ? 'border-purple-500 bg-purple-50 text-purple-700'
+                                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    Admin
                                 </button>
                             </div>
                         </div>

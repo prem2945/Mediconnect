@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
 import { loginUser } from '../../api/auth.api';
-import { Mail, Lock, Loader2, AlertCircle, Heart } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle, Heart, ShieldCheck, User, Stethoscope } from 'lucide-react';
 
 const getRedirectPath = (role) => {
     switch (role) {
@@ -20,6 +20,7 @@ const getRedirectPath = (role) => {
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [selectedRole, setSelectedRole] = useState('PATIENT');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -51,7 +52,7 @@ function Login() {
             const decoded = JSON.parse(atob(payload));
             navigate(getRedirectPath(decoded.role));
         } catch (err) {
-            const message = err.response?.data?.message || 'Login failed. Please try again.';
+            const message = err.response?.data?.message || 'Login failed. Please check credentials.';
             setError(message);
         } finally {
             setLoading(false);
@@ -72,9 +73,53 @@ function Login() {
 
                 {/* Login Card */}
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                    <h2 className="text-xl font-semibold text-gray-800 text-center mb-6">
+                    <h2 className="text-xl font-semibold text-gray-800 text-center mb-4">
                         Welcome back
                     </h2>
+
+                    {/* Role Selection Tabs (Patient / Doctor / Admin) */}
+                    <div className="mb-6 bg-gray-100 p-1 rounded-xl flex items-center gap-1">
+                        <button
+                            type="button"
+                            onClick={() => setSelectedRole('PATIENT')}
+                            className={`flex-1 py-2 px-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${selectedRole === 'PATIENT'
+                                ? 'bg-white text-blue-700 shadow-xs'
+                                : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            <User className="w-3.5 h-3.5" />
+                            Patient
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setSelectedRole('DOCTOR')}
+                            className={`flex-1 py-2 px-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${selectedRole === 'DOCTOR'
+                                ? 'bg-white text-emerald-700 shadow-xs'
+                                : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            <Stethoscope className="w-3.5 h-3.5" />
+                            Doctor
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setSelectedRole('ADMIN')}
+                            className={`flex-1 py-2 px-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${selectedRole === 'ADMIN'
+                                ? 'bg-white text-purple-700 shadow-xs'
+                                : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
+                            Admin
+                        </button>
+                    </div>
+
+                    {selectedRole === 'ADMIN' && (
+                        <div className="mb-5 p-3 bg-purple-50 border border-purple-100 rounded-lg text-xs text-purple-800 flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0" />
+                            <span><strong>Admin Portal:</strong> Approve clinic registrations, verify doctors, & monitor platform activities.</span>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
@@ -96,7 +141,7 @@ function Login() {
                                     id="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="you@example.com"
+                                    placeholder={selectedRole === 'ADMIN' ? 'admin@mediconnect.com' : 'you@example.com'}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
@@ -124,7 +169,7 @@ function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            className={`w-full flex items-center justify-center gap-2 px-6 py-3 text-white text-sm font-medium rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed ${selectedRole === 'ADMIN' ? 'bg-purple-600 hover:bg-purple-700' : selectedRole === 'DOCTOR' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                         >
                             {loading ? (
                                 <>
@@ -132,7 +177,7 @@ function Login() {
                                     Signing in...
                                 </>
                             ) : (
-                                'Sign In'
+                                `Sign In as ${selectedRole.charAt(0) + selectedRole.slice(1).toLowerCase()}`
                             )}
                         </button>
                     </form>

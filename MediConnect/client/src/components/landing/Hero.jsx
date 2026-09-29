@@ -46,7 +46,7 @@ const Hero = () => {
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </Link>
                             <Link to="/login" className="w-full sm:w-auto px-8 py-4 bg-white text-slate-700 font-bold rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center">
-                                Patient & Doctor Login
+                                Patient, Doctor & Admin Login
                             </Link>
                         </div>
 
