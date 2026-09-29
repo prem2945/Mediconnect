@@ -1,6 +1,8 @@
 import Report from '../models/report.model.js';
 import cloudinary from '../config/cloudinary.js';
-import streamifier from 'streamifier';// POST /api/v1/reports
+import { config } from '../config/env.js';
+import streamifier from 'streamifier';
+
 const uploadToCloudinary = (buffer) => {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -36,13 +38,31 @@ export const uploadReport = async (req, res) => {
             });
         }
 
-        const result = await uploadToCloudinary(req.file.buffer);
+        let fileUrl = '';
+        let publicId = `report_${Date.now()}`;
+
+        // Attempt Cloudinary upload if configured
+        if (config.CLOUDINARY_CLOUD_NAME && config.CLOUDINARY_API_KEY && config.CLOUDINARY_API_SECRET) {
+            try {
+                const result = await uploadToCloudinary(req.file.buffer);
+                fileUrl = result.secure_url;
+                publicId = result.public_id;
+            } catch (err) {
+                console.warn('[WARN] Cloudinary report upload failed, using base64 fallback:', err.message);
+            }
+        }
+
+        if (!fileUrl) {
+            // Fail-safe fallback to base64 Data URI
+            const mimeType = req.file.mimetype || 'application/pdf';
+            fileUrl = `data:${mimeType};base64,${req.file.buffer.toString('base64')}`;
+        }
 
         const report = await Report.create({
             patient: req.user.id,
             title: req.body.title || title,
-            fileUrl: result.secure_url,
-            publicId: result.public_id,
+            fileUrl: fileUrl,
+            publicId: publicId,
             fileType: req.file.mimetype,
             uploadedAt: new Date()
         });
@@ -53,6 +73,7 @@ export const uploadReport = async (req, res) => {
         });
 
     } catch (error) {
+        console.error('Upload report error:', error);
         res.status(500).json({
             success: false,
             message: "Upload failed",

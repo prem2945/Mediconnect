@@ -1,4 +1,41 @@
 import DoctorPost from '../models/post.model.js';
+import cloudinary from '../config/cloudinary.js';
+import { config } from '../config/env.js';
+import streamifier from 'streamifier';
+
+const uploadToCloudinary = (buffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'MediConnect/doctor-posts',
+                resource_type: 'auto',
+            },
+            (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            }
+        );
+        streamifier.createReadStream(buffer).pipe(stream);
+    });
+};
+
+const processImageUpload = async (file) => {
+    if (!file) return null;
+
+    // Check if Cloudinary is configured
+    if (config.CLOUDINARY_CLOUD_NAME && config.CLOUDINARY_API_KEY && config.CLOUDINARY_API_SECRET) {
+        try {
+            const result = await uploadToCloudinary(file.buffer);
+            return result.secure_url;
+        } catch (err) {
+            console.warn('[WARN] Cloudinary upload failed, using base64 fallback:', err.message);
+        }
+    }
+
+    // Fail-safe fallback to base64 Data URI
+    const mimeType = file.mimetype || 'image/jpeg';
+    return `data:${mimeType};base64,${file.buffer.toString('base64')}`;
+};
 
 // Get all posts (public, sorted by newest first)
 export const getPosts = async (req, res) => {
@@ -22,9 +59,6 @@ export const getPosts = async (req, res) => {
 // Create a new post (DOCTOR only)
 export const createPost = async (req, res) => {
     try {
-        console.log("FILE:", req.file);
-        console.log("BODY:", req.body);
-
         const { title, content, clinicId } = req.body;
 
         if (!title || !content) {
@@ -35,12 +69,14 @@ export const createPost = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Image file is required' });
         }
 
+        const imageUrl = await processImageUpload(req.file);
+
         const post = new DoctorPost({
             author: req.user.id,
             clinic: clinicId || null,
             title,
             content,
-            image: req.file.path,
+            image: imageUrl,
         });
 
         await post.save();
@@ -101,7 +137,7 @@ export const updatePost = async (req, res) => {
 
         if (title !== undefined) post.title = title;
         if (content !== undefined) post.content = content;
-        if (req.file) post.image = req.file.path;
+        if (req.file) post.image = await processImageUpload(req.file);
 
         await post.save();
         await post.populate('author', 'name');

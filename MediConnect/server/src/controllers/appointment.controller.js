@@ -7,6 +7,7 @@ import User from '../models/user.model.js';
 import { generateSlots } from '../utils/slotGenerator.js';
 import { generatePrescriptionPDF } from '../utils/generatePrescription.js';
 import cloudinary from '../config/cloudinary.js';
+import { config } from '../config/env.js';
 import streamifier from 'streamifier';
 
 export const bookAppointment = async (req, res, next) => {
@@ -272,8 +273,12 @@ export const completeConsultation = async (req, res, next) => {
                 });
             };
 
-            const cloudinaryResult = await uploadToCloudinary(pdfBuffer);
-            appointment.prescriptionUrl = cloudinaryResult.secure_url;
+            if (config.CLOUDINARY_CLOUD_NAME && config.CLOUDINARY_API_KEY && config.CLOUDINARY_API_SECRET) {
+                const cloudinaryResult = await uploadToCloudinary(pdfBuffer);
+                appointment.prescriptionUrl = cloudinaryResult.secure_url;
+            } else {
+                appointment.prescriptionUrl = `data:application/pdf;base64,${pdfBuffer.toString('base64')}`;
+            }
 
         } catch (pdfError) {
             console.error('Failed to generate or upload Prescription PDF:', pdfError);
