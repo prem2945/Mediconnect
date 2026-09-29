@@ -5,8 +5,14 @@ import Report from '../models/report.model.js';
 import AIInsight from '../models/AIInsight.model.js';
 import { sendToGroq } from '../utils/groqClient.js';
 
-// Helper to securely fetch a file into memory via HTTPS
+// Helper to securely fetch a file into memory via HTTPS or Base64 Data URI
 const fetchFileToBuffer = (url) => {
+    if (typeof url === 'string' && url.startsWith('data:')) {
+        const parts = url.split(',');
+        const base64Data = parts[1] || '';
+        return Promise.resolve(Buffer.from(base64Data, 'base64'));
+    }
+
     return new Promise((resolve, reject) => {
         const parsedUrl = new URL(url);
 
